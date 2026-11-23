@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SARAS - Teacher Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','system-ui','sans-serif']}}}}</script>
+<style>
+:root{--bg:#09090B;--card:rgba(24,24,27,.72);--solid:#141417;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);--text:#e4e4e7;--muted:#a1a1aa;--faint:#71717a;--accent:#34d399;--accent2:#22d3ee;--warn:#fbbf24;--bad:#f87171;--chip:rgba(255,255,255,.05);--grid:rgba(255,255,255,.09);--glow:rgba(52,211,153,.13);--badbg:rgba(248,113,113,.13);--goodbg:rgba(52,211,153,.12);--gray:#8b8b94}
+html.light{--bg:#f4f5f7;--card:rgba(255,255,255,.9);--solid:#ffffff;--border:rgba(15,23,42,.1);--border2:rgba(15,23,42,.2);--text:#18181b;--muted:#52525b;--faint:#71717a;--accent:#059669;--accent2:#0e7490;--warn:#b45309;--bad:#dc2626;--chip:rgba(15,23,42,.05);--grid:rgba(15,23,42,.1);--glow:rgba(5,150,105,.1);--badbg:rgba(220,38,38,.08);--goodbg:rgba(5,150,105,.1);--gray:#71717a}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+body{min-height:100vh;padding-bottom:64px;background-image:radial-gradient(900px 380px at 12% -8%,var(--glow),transparent 60%)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.ctitle{font-size:13px;font-weight:600;letter-spacing:.01em}
+.muted{color:var(--muted)}.faint{color:var(--faint)}
+.new{font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);border-radius:99px;padding:1px 6px;margin-right:6px;vertical-align:1px}
+.chip{background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;transition:.15s}
+.chip:hover{border-color:var(--border2);color:var(--text)}.chip.on{color:var(--text);border-color:var(--accent);background:var(--goodbg)}
+.btn{background:var(--chip);border:1px solid var(--border2);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:.15s;text-align:center}
+.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.primary{background:var(--accent);color:#04130d;border-color:var(--accent)}.btn.primary:hover{filter:brightness(1.08);color:#04130d}
+.btn.danger:hover{border-color:var(--bad);color:var(--bad)}.btn:disabled{opacity:.45;cursor:not-allowed}
+select,input,textarea{background:var(--chip);border:1px solid var(--border);color:var(--text);border-radius:10px;outline:none;font-size:13px}
+select option{background:var(--solid);color:var(--text)}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+.avatar{border-radius:999px;display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+.scroll{overflow:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+.pa{display:inline-flex;border:1px solid var(--border2);border-radius:99px;overflow:hidden;background:var(--chip)}
+.pa button{width:34px;height:24px;font-size:12px;font-weight:700;color:var(--muted);transition:.12s}
+.pa button:first-child{border-right:1px solid var(--border)}
+.pa button:hover{color:var(--text)}
+.pa button.p.on{background:var(--accent);color:#04130d}.pa button.a.on{background:var(--bad);color:#1b0505}
+.row{border-radius:10px;border:1px solid transparent}
+.row:hover{background:var(--chip)}.row.sel{background:var(--chip);border-color:var(--accent)}
+.drop{border:2px dashed var(--border2);border-radius:14px;transition:.15s;cursor:pointer;background:var(--chip)}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--goodbg)}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%) translateY(20px);background:var(--solid);border:1px solid var(--border2);padding:9px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:80}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:var(--solid);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:760px;max-height:88vh;display:flex;flex-direction:column}
+.switch{width:44px;height:24px;border-radius:99px;background:var(--chip);border:1px solid var(--border2);position:relative;cursor:pointer;transition:.2s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:99px;background:var(--text);transition:.2s}
+html.light .switch::after{left:22px}
+.skeleton{background:linear-gradient(90deg,var(--chip),var(--border),var(--chip));background-size:200% 100%;animation:sk 1.3s infinite;border-radius:10px}
+@keyframes sk{to{background-position:-200% 0}}
+table{border-collapse:collapse;width:100%}th{position:sticky;top:0;background:var(--solid);text-align:left;font-size:11px;color:var(--faint);font-weight:600;padding:8px 10px;cursor:default}
+td{padding:7px 10px;font-size:13px;border-top:1px solid var(--border)}
+.gtag{display:inline-block;min-width:28px;text-align:center;font-weight:700;font-size:12px;border-radius:6px;padding:1px 6px}
+.fade{opacity:0;transform:translateX(12px);transition:.3s}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="sticky top-0 z-40 border-b" style="background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);border-color:var(--border)">
+  <div class="max-w-[1500px] mx-auto px-4 py-3 flex items-center gap-3 sm:gap-6">
+    <a href="/" class="flex items-center gap-2 shrink-0" aria-label="SARAS home">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><path d="M22 8.5c-1.6-1.8-3.8-2.7-6.4-2.7-3.6 0-6 1.8-6 4.5 0 6.1 12.8 3.2 12.8 9.8 0 3.1-2.9 5.1-6.7 5.1-3 0-5.5-1.1-7.2-3.1" fill="none" stroke="url(#lg)" stroke-width="3.4" stroke-linecap="round"/></svg>
+      <span class="font-semibold tracking-[.32em] text-lg">SARAS</span>
+    </a>
+    <label class="relative flex-1 max-w-xl">
+      <span class="sr-only">Search students</span>
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 faint" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="search" type="search" placeholder="Search students by name or roll ( / )" class="w-full pl-9 pr-3 py-2" autocomplete="off">
+    </label>
+    <div class="hidden sm:block ml-auto">
+      <div class="text-[10px] faint leading-none mb-0.5">Semester Selector</div>
+      <select id="semSel" class="px-3 py-1.5 text-sm font-medium" aria-label="Semester"></select>
+    </div>
+    <div class="relative">
+      <button id="profileBtn" class="chip flex items-center gap-2" style="padding:5px 12px 5px 5px;font-size:13px;color:var(--text)" aria-haspopup="true">
+        <span id="pAvatar" class="avatar" style="width:28px;height:28px;font-size:11px">--</span><span id="pName" class="hidden sm:inline">Loading...</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div id="profileMenu" class="card hidden absolute right-0 mt-2 w-44 p-1.5 z-50" style="background:var(--solid)"><button class="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-[var(--chip)]" id="menuLogout">Sign out</button></div>
+    </div>
+  </div>
+  <div class="sm:hidden px-4 pb-2"><select id="semSelM" class="w-full px-3 py-1.5 text-sm" aria-label="Semester"></select></div>
+</header>
+
+<main class="max-w-[1500px] mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+  <!-- LEFT HALF -->
+  <div class="space-y-4 min-w-0">
+    <div class="grid grid-cols-2 gap-4" id="kpiA"><div class="card h-[112px] skeleton"></div><div class="card h-[112px] skeleton"></div></div>
+    <section class="card p-4" aria-label="Class roster">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+        <h2 class="ctitle">Real-Time Class Roster &amp; Attendance Grid</h2>
+        <span id="saveState" class="text-[11px] faint" aria-live="polite"></span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2 mb-3">
+        <select id="courseSel" class="px-2.5 py-1.5 text-sm font-medium max-w-full" aria-label="Course"></select>
+        <select id="dateSel" class="px-2.5 py-1.5 text-sm" aria-label="Class date"></select>
+        <label class="ml-auto relative"><span class="sr-only">Filter roster</span>
+          <input id="rosterQ" class="px-3 py-1.5 text-xs w-52" placeholder="Type P or A, or a keyword" autocomplete="off" aria-describedby="kbHint"></label>
+      </div>
+      <div class="grid items-center text-[11px] faint px-2 pb-1.5" style="grid-template-columns:minmax(0,1.6fr) 48px minmax(0,1.3fr) 88px"><span>Student Name</span><span>Roll</span><span>Last Seen</span><span class="text-right">Attendance</span></div>
+      <div id="roster" class="scroll space-y-0.5 pr-1" style="max-height:372px" role="grid" aria-label="Attendance grid"></div>
+      <div class="flex flex-wrap items-center gap-2 mt-3">
+        <span id="tally" class="text-xs muted"></span>
+        <div class="ml-auto flex gap-2"><button class="btn" id="allP">All present</button><button class="btn" id="restA">Rest absent</button><button class="btn danger" id="clearAll">Clear</button></div>
+      </div>
+      <p id="kbHint" class="text-[11px] faint mt-2">Keyboard: <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> select a student, <kbd>P</kbd> present, <kbd>A</kbd> absent, <kbd>Space</kbd> toggle, <kbd>Shift+P</kbd> all present.</p>
+    </section>
+  </div>
+
+  <!-- RIGHT HALF -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 min-w-0 items-start">
+    <div class="card p-4 h-[112px] flex flex-col" id="kpiC"><div class="skeleton h-full"></div></div>
+
+    <section class="card p-4 sm:row-span-2" aria-label="Quick mark and grade manager">
+      <div class="mb-3"><h2 class="ctitle"><span class="new">NEW</span>Quick Mark &amp; Grade Manager</h2><div id="hubCourse" class="text-[11px] faint mt-0.5"></div></div>
+      <div id="drop" class="drop grid place-items-center text-center px-3 py-7" tabindex="0" role="button" aria-label="Upload Excel or CSV marks file">
+        <div><svg class="mx-auto mb-2 muted" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+        <div class="text-sm font-semibold muted">Drop Excel/CSV File Here</div><div class="text-[11px] faint mt-1">or click to browse - .xlsx .csv</div></div>
+        <input type="file" id="file" class="hidden" accept=".csv,.tsv,.txt,.xlsx,.xls">
+      </div>
+      <button id="tplBtn" class="text-[11px] mt-2 underline faint hover:text-[var(--accent)]">Download marks template (CSV)</button>
+      <div class="text-xs mt-3 space-y-1"><div class="muted" id="lastUp">Last Upload: -</div><div id="upStatus" class="muted"></div></div>
+      <div class="grid gap-2 mt-3"><button class="btn" id="rulesBtn">Configure Auto-Grade Rules</button><button class="btn" id="gbBtn">View Generated Gradebook</button></div>
+    </section>
+
+    <section class="card p-4" aria-label="Data integrity console">
+      <div class="flex items-center justify-between mb-2.5"><h2 class="ctitle"><span class="new">NEW</span>Data Integrity Console</h2><button class="btn" id="resolveAll" style="padding:4px 10px">Resolve All</button></div>
+      <div id="integrity" class="space-y-2"></div>
+    </section>
+
+    <section class="card p-4 sm:col-span-2" aria-label="Departmental performance radar">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-1"><h2 class="ctitle"><span class="new">NEW</span>Departmental Performance Radar</h2>
+        <div class="flex gap-1.5" id="legend"></div></div>
+      <div id="radar" class="mx-auto" style="max-width:430px"></div>
+      <div class="flex items-center gap-1.5 mt-2"><span class="text-[11px] faint mr-1">Bars:</span><button class="chip on" data-tab="grades">Grade mix</button><button class="chip" data-tab="pass">Pass % by course</button></div>
+      <div id="bars" class="mt-2"></div>
+      <p id="passCap" class="text-[11px] muted text-right mt-1"></p>
+    </section>
+  </div>
+</main>
+
+<footer class="fixed bottom-0 inset-x-0 z-30 border-t" style="background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);border-color:var(--border)">
+  <div class="max-w-[1500px] mx-auto px-4 py-3 flex items-center justify-center gap-3 text-sm">
+    <button id="themeSwitch" class="switch" role="switch" aria-checked="false" aria-label="Toggle light and dark theme"></button><span id="themeLabel" class="muted">Dark theme - click to switch</span></div>
+</footer>
+<div id="modal" class="modal-bg" role="dialog" aria-modal="true"><div class="modal" id="modalBox"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- common helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const API=window.SARAS_DEMO_API||{
+  async req(method,url,body){
+    const r=await fetch(url,{method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    if(r.status===401){location.href='/login';throw new Error('Signed out')}
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw Object.assign(new Error(j.error||r.statusText),{status:r.status,data:j});
+    return j},
+  get(u){return this.req('GET',u)},post(u,b){return this.req('POST',u,b||{})},put(u,b){return this.req('PUT',u,b||{})},del(u){return this.req('DELETE',u)}};
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800)}
+const hue=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))%360;return h};
+const initials=n=>String(n).replace(/\./g,'').split(/\s+/).filter(w=>w&&!/^(prof|professor|dr)$/i.test(w)).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+const avatar=(n,sz=30)=>`<span class="avatar" style="width:${sz}px;height:${sz}px;font-size:${Math.round(sz*.38)}px;background:hsl(${hue(n)} 50% 42%)">${esc(initials(n))}</span>`;
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function setTheme(t){document.documentElement.classList.toggle('light',t==='light');document.documentElement.classList.toggle('dark',t!=='light');$('#themeSwitch').setAttribute('aria-checked',t==='light');$('#themeLabel').textContent=t==='light'?'Light theme - click to switch':'Dark theme - click to switch';store('saras-theme',t)}
+const modalOpen=()=>$('#modal').classList.contains('open');
+function openModal(html,wide){$('#modalBox').style.maxWidth=wide||'760px';$('#modalBox').innerHTML=html;$('#modal').classList.add('open');const f=$('#modalBox [autofocus]');f&&f.focus()}
+function closeModal(){$('#modal').classList.remove('open')}
+$('#modal').addEventListener('mousedown',e=>{if(e.target.id==='modal')closeModal()});
+const ago=iso=>{const s=Math.max(0,(Date.now()-new Date(iso).getTime())/1000);if(s<60)return 'just now';if(s<3600)return Math.round(s/60)+' mins ago';if(s<86400)return Math.round(s/3600)+' hrs ago';return Math.round(s/86400)+' days ago'};
+const fmtSize=b=>b>=1048576?(b/1048576).toFixed(1)+'MB':Math.max(1,Math.round(b/1024))+'KB';
+function fmtSeen(s){if(!s)return '-';const[d,t]=s.split(' '),[y,m,dd]=d.split('-').map(Number),[h,mi]=t.split(':').map(Number);
+  return new Date(y,m-1,dd).toLocaleDateString('en-US',{month:'short',day:'numeric'})+' - '+((h%12)||12)+':'+String(mi).padStart(2,'0')+' '+(h<12?'AM':'PM')}
+const fmtDay=iso=>{const[y,m,d]=iso.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})};
+const gradeColor=g=>({O:'#34d399','A+':'#4ade80',A:'#a3e635','B+':'#facc15',B:'#fb923c',C:'#f97316',F:'#f87171'}[g]||'var(--muted)');
+const gtag=g=>g?`<span class="gtag" style="color:${gradeColor(g)};background:color-mix(in srgb,${gradeColor(g)} 14%,transparent)">${esc(g)}</span>`:'<span class="faint">-</span>';
+
+/* ---------- chart helpers ---------- */
+let uid=0;
+function spark(vals,color='var(--accent)',w=200,h=40){
+  if(!vals||vals.length<2)return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}"><line x1="0" y1="${h-6}" x2="${w}" y2="${h-6}" stroke="var(--grid)" stroke-dasharray="3 4"/></svg>`;
+  const id='sg'+(++uid),mn=Math.min(...vals),mx=Math.max(...vals),r=(mx-mn)||1,pts=vals.map((v,i)=>[i/(vals.length-1)*(w-4)+2,h-6-((v-mn)/r)*(h-14)]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".4"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs><path d="${d} L${w-2} ${h} L2 ${h} Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`}
+function ring(p,color,size=74){const r=34,c=2*Math.PI*r,f=Math.max(0,Math.min(100,p||0))/100;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 84 84" role="img" aria-label="${p}%"><circle cx="42" cy="42" r="${r}" fill="none" stroke="var(--grid)" stroke-width="8"/><circle cx="42" cy="42" r="${r}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(c*f).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 42 42)"/><text x="42" y="47" text-anchor="middle" font-size="17" font-weight="700" fill="var(--text)">${p==null?'--':Math.round(p)+'%'}</text></svg>`}
+
+/* ---------- state ---------- */
+const S={semesters:[],sem:null,dash:null,off:null,roster:null,date:null,q:'',rq:'',sel:null,pending:new Map(),saveT:null,
+  an:null,hide:{course:false,dept:false},tab:'grades',alerts:[],rules:null,readonly:false};
+const isCur=()=>S.dash&&S.dash.semester.is_current;
+
+/* ---------- KPIs ---------- */
+function renderKpis(){
+  const k=S.dash.kpis,tr=k.students_trend.map(t=>t.value);
+  $('#kpiA').innerHTML=
+   `<div class="card p-4 h-[112px] flex flex-col"><div class="text-[13px] muted font-medium">1. My Active Courses: <b class="text-[var(--text)]">${k.active_courses}</b></div><div class="flex-1 grid place-items-center"><div class="card" style="padding:6px 26px;font-size:26px;font-weight:700;border-radius:12px">${k.active_courses}</div></div></div>
+    <div class="card p-4 h-[112px] flex flex-col"><div class="text-[13px] muted font-medium">2. Total Enrolled Students: <b class="text-[var(--text)]">${k.total_students}</b></div><div class="flex-1 flex items-end">${spark(tr,'var(--warn)',240,52)}</div></div>`;
+  const a=k.avg_attendance;
+  $('#kpiC').innerHTML=`<div class="text-[13px] muted font-medium">3. Avg. Class Attendance: <b class="text-[var(--text)]">${a==null?'--':Math.round(a)+'%'}</b></div><div class="flex-1 grid place-items-center">${ring(a,a!=null&&a<75?'var(--bad)':'var(--accent)')}</div>`}
+
+/* ---------- roster ---------- */
+const shown=()=>{const q=(S.q||'').toLowerCase(),r=(S.rq||'').toLowerCase();return S.roster.students.filter(s=>(!q||s.name.toLowerCase().includes(q)||s.roll_no.includes(q))&&(!r||s.name.toLowerCase().includes(r)||s.roll_no.includes(r)))};
+function renderRoster(){
+  const R=S.roster;if(!R){$('#roster').innerHTML='<p class="text-sm faint p-3">No course selected.</p>';return}
+  const list=shown(),ro=S.readonly;
+  $('#roster').innerHTML=list.map(s=>`<div class="row grid items-center gap-1 px-2 py-1.5 ${S.sel===s.enrollment_id?'sel':''}" style="grid-template-columns:minmax(0,1.6fr) 48px minmax(0,1.3fr) 88px" data-eid="${s.enrollment_id}" role="row" tabindex="-1">
+     <div class="flex items-center gap-2 min-w-0">${avatar(s.name,26)}<span class="text-sm truncate" title="${esc(s.name)}">${esc(s.name)}</span></div>
+     <span class="text-xs muted font-mono">${esc(s.roll_no)}</span>
+     <span class="text-[11px] faint truncate">${s.last_seen?'Last Seen '+fmtSeen(s.last_seen):'Not seen yet'}</span>
+     <div class="text-right"><div class="pa" role="group" aria-label="Attendance for ${esc(s.name)}"><button class="p ${s.status==='P'?'on':''}" data-set="P" aria-pressed="${s.status==='P'}" title="Present" ${ro?'disabled':''}>P</button><button class="a ${s.status==='A'?'on':''}" data-set="A" aria-pressed="${s.status==='A'}" title="Absent" ${ro?'disabled':''}>A</button></div></div></div>`).join('')||'<p class="text-sm faint p-3">No students match.</p>';
+  const all=R.students,p=all.filter(s=>s.status==='P').length,a=all.filter(s=>s.status==='A').length;
+  $('#tally').innerHTML=`<b style="color:var(--accent)">${p}</b> present - <b style="color:var(--bad)">${a}</b> absent - ${all.length-p-a} unmarked`+(ro?' - <span class="faint">read-only (past semester)</span>':'');
+  $$('#allP,#restA,#clearAll').forEach(b=>b.disabled=ro)}
+function setStatus(eid,status){
+  if(S.readonly)return;const s=S.roster.students.find(x=>x.enrollment_id===eid);if(!s)return;
+  s.status=s.status===status?null:status;S.pending.set(eid,s.status);renderRoster();queueSave()}
+function bulk(fn){if(S.readonly)return;S.roster.students.forEach(s=>{const n=fn(s);if(n!==s.status){s.status=n;S.pending.set(s.enrollment_id,n)}});renderRoster();queueSave()}
+function queueSave(){$('#saveState').textContent='Saving...';clearTimeout(S.saveT);S.saveT=setTimeout(flush,350)}
+async function flush(){
+  if(!S.pending.size)return;const marks=[...S.pending].map(([enrollment_id,status])=>({enrollment_id,status})),snap=new Map(S.pending);S.pending.clear();
+  try{await API.put(`/api/teacher/offerings/${S.off}/attendance`,{date:S.date,marks});$('#saveState').textContent='Saved '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});loadKpiOnly()}
+  catch(e){snap.forEach((v,k)=>{if(!S.pending.has(k))S.pending.set(k,v)});$('#saveState').textContent='Not saved';toast('Could not save attendance: '+e.message)}}
+async function loadKpiOnly(){try{S.dash=await API.get('/api/teacher/dashboard?semester_id='+S.sem);renderKpis()}catch(e){}}
+async function loadRoster(date){
+  const R=await API.get(`/api/teacher/offerings/${S.off}/roster`+(date?`?date=${date}`:''));
+  S.roster=R;S.date=R.date;S.sel=null;
+  $('#dateSel').innerHTML=R.class_dates.map(d=>`<option value="${d}">${fmtDay(d)}</option>`).join('');$('#dateSel').value=R.date;
+  if(!R.class_dates.includes(R.date))$('#dateSel').insertAdjacentHTML('afterbegin',`<option value="${R.date}">${fmtDay(R.date)}</option>`),$('#dateSel').value=R.date;
+  renderRoster()}
+
+
+/* ---------- upload / gradebook ---------- */
+function renderUpload(u){
+  const c=S.dash.courses.find(c=>c.offering_id===S.off);$('#hubCourse').textContent=c?`${c.code} - ${c.name}`:'';
+  if(!u){$('#lastUp').textContent='Last Upload: none yet';$('#upStatus').innerHTML='Status: <span class="faint">waiting for a file</span>';return}
+  $('#lastUp').textContent=`Last Upload: ${u.filename} (${fmtSize(u.size_bytes)}) - ${ago(u.created_at)}`;
+  $('#upStatus').innerHTML=`Status: ${u.processed}/${u.total} Students Processed - <b style="color:${u.status==='OK'?'var(--accent)':'var(--warn)'}">${esc(u.status)}</b>`}
+async function loadUpload(){try{renderUpload(await API.get(`/api/teacher/offerings/${S.off}/upload-status`))}catch(e){}}
+async function getRules(){if(!S.rules||S.rules.off!==S.off){const r=await API.get(`/api/teacher/offerings/${S.off}/grade-rules`);S.rules={...r,off:S.off}}return S.rules}
+const gradeOf=(pct,rules)=>{for(const r of [...rules].sort((a,b)=>b.min-a.min))if(pct>=r.min)return r;return {grade:'F',points:0}};
+
+function parseCSV(text){
+  const first=text.split(/\r?\n/)[0]||'',delim=[',',';','\t'].map(d=>[d,first.split(d).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const rows=[];let row=[],cur='',q=false;
+  for(let i=0;i<text.length;i++){const ch=text[i];
+    if(q){if(ch==='"'&&text[i+1]==='"'){cur+='"';i++}else if(ch==='"')q=false;else cur+=ch}
+    else if(ch==='"')q=true;else if(ch===delim){row.push(cur);cur=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cur);cur='';if(row.some(c=>c.trim()!==''))rows.push(row);row=[]}
+    else cur+=ch}
+  if(cur!==''||row.length){row.push(cur);if(row.some(c=>c.trim()!==''))rows.push(row)}return rows}
+async function readSheet(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(['csv','tsv','txt'].includes(ext))return parseCSV((await file.text()).replace(/^﻿/,''));
+  if(!window.XLSX)throw new Error('The Excel reader could not load (offline?). Save the sheet as CSV and upload that instead.');
+  const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''})}
+function mapColumns(header){
+  const n=header.map(h=>String(h).toLowerCase().replace(/[^a-z0-9]/g,'')),find=re=>n.findIndex(h=>re.test(h));
+  const m={roll:find(/^(roll|rollno|rollnumber|id|studentid|regno|enrol)/),internal:find(/(internal|^ia|cia|mid|sessional)/),external:find(/(external|final|end|exam|ese|^sem)/),name:find(/name/)};
+  return m}
+async function handleFile(file){
+  if(!file)return;if(!isCur()||!S.off)return toast('Select the current semester to upload marks');
+  let rows;try{rows=await readSheet(file)}catch(e){return toast(e.message)}
+  if(rows.length<2)return toast('The file has no data rows');
+  const m=mapColumns(rows[0]);
+  if(m.roll<0||m.internal<0||m.external<0)return toast('Could not find columns: need roll, internal and external (found: '+rows[0].map(String).join(', ')+')');
+  const rules=await getRules(),roster=new Map(S.roster.students.map(s=>[s.roll_no,s])),seen=new Set(),out=[];
+  rows.slice(1).forEach((r,i)=>{
+    const roll=String(r[m.roll]).trim().replace(/\.0$/,''),iv=String(r[m.internal]).trim(),ev=String(r[m.external]).trim(),im=Number(iv),ex=Number(ev),issues=[];
+    if(!roll)issues.push('Missing roll number');else if(!roster.has(roll))issues.push('Not enrolled in this course');else if(seen.has(roll))issues.push('Duplicate roll number');
+    if(iv===''||isNaN(im)||ev===''||isNaN(ex))issues.push('Marks must be numbers');
+    else{if(im<0||im>rules.internal_max)issues.push(`Internal must be 0-${rules.internal_max}`);if(ex<0||ex>rules.external_max)issues.push(`External must be 0-${rules.external_max}`)}
+    seen.add(roll);const ok=!issues.length,tot=ok?im+ex:null,pct=ok?tot/(rules.internal_max+rules.external_max)*100:null,g=ok?gradeOf(pct,rules.rules):null;
+    out.push({row:i+2,roll,name:roster.get(roll)?.name||(m.name>=0?String(r[m.name]):''),internal:ok?im:iv,external:ok?ex:ev,total:tot,grade:g?.grade,issues})});
+  showPreview(file,out,rules)}
+function showPreview(file,rows,rules){
+  const good=rows.filter(r=>!r.issues.length),bad=rows.length-good.length,missing=S.roster.students.length-new Set(good.map(r=>r.roll)).size,dist={};good.forEach(r=>dist[r.grade]=(dist[r.grade]||0)+1);
+  openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><div class="flex justify-between gap-3"><div><h3 class="font-semibold">Upload preview - ${esc(file.name)}</h3><p class="text-xs muted mt-0.5">Totals and grades are calculated automatically from your grade rules (internal /${rules.internal_max}, external /${rules.external_max}).</p></div><button class="btn h-fit" onclick="closeModal()">Cancel</button></div>
+    <div class="flex flex-wrap gap-2 mt-3 text-xs"><span class="chip">${rows.length} rows</span><span class="chip on">${good.length} valid</span>${bad?`<span class="chip" style="color:var(--bad);border-color:var(--bad)">${bad} with issues (skipped)</span>`:''}${missing>0?`<span class="chip" style="color:var(--warn)">${missing} enrolled students not in file</span>`:''}${Object.entries(dist).map(([g,n])=>`<span class="chip">${esc(g)}: ${n}</span>`).join('')}</div></div>
+    <div class="scroll flex-1"><table><thead><tr><th>Row</th><th>Roll</th><th>Name</th><th>Internal</th><th>External</th><th>Total</th><th>Grade</th><th>Check</th></tr></thead><tbody>${rows.map(r=>`<tr style="${r.issues.length?'background:var(--badbg)':''}"><td class="faint">${r.row}</td><td class="font-mono">${esc(r.roll)}</td><td>${esc(r.name)}</td><td>${esc(r.internal)}</td><td>${esc(r.external)}</td><td><b>${r.total??'-'}</b></td><td>${gtag(r.grade)}</td><td class="text-xs" style="color:${r.issues.length?'var(--bad)':'var(--accent)'}">${r.issues.length?esc(r.issues.join('; ')):'OK'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="p-4 border-t flex justify-end gap-2" style="border-color:var(--border)"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="apply" ${good.length?'':'disabled'} autofocus>Apply ${good.length} valid row${good.length===1?'':'s'}</button></div>`,'900px');
+  $('#apply').onclick=async()=>{$('#apply').disabled=true;$('#apply').textContent='Saving...';
+    try{const r=await API.post(`/api/teacher/offerings/${S.off}/results`,{filename:file.name,size:file.size,rows:good.map(x=>({roll_no:x.roll,internal:x.internal,external:x.external}))});
+      closeModal();toast(`${r.processed}/${r.total} students processed - ${r.status}`);await Promise.all([loadUpload(),loadAnalytics()])}
+    catch(e){toast(e.message);$('#apply').disabled=false;$('#apply').textContent='Retry'}}}
+const drop=$('#drop'),fileIn=$('#file');
+drop.onclick=()=>fileIn.click();drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileIn.click()}};
+fileIn.onchange=()=>{handleFile(fileIn.files[0]);fileIn.value=''};
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
+function download(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+const csvCell=v=>{v=v==null?'':String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+$('#tplBtn').onclick=async()=>{if(!S.off)return;try{const g=await API.get(`/api/teacher/offerings/${S.off}/gradebook`);
+  download(`${g.course.code}_marks_template.csv`,'roll_no,name,internal,external\n'+g.rows.map(r=>[r.roll_no,r.name,r.internal,r.external].map(csvCell).join(',')).join('\n'));toast('Template downloaded - fill in the marks and drop it here')}catch(e){toast(e.message)}};
+
+async function openGradebook(){
+  if(!S.off)return;let g;try{g=await API.get(`/api/teacher/offerings/${S.off}/gradebook`)}catch(e){return toast(e.message)}
+  let sort={k:'roll_no',dir:1},q='';const sm=g.summary;
+  const body=()=>{let r=g.rows.filter(x=>!q||x.name.toLowerCase().includes(q)||x.roll_no.includes(q));
+    r=[...r].sort((a,b)=>{const x=a[sort.k],y=b[sort.k];return (x==null)-(y==null)||(typeof x==='number'?x-y:String(x).localeCompare(String(y),undefined,{numeric:true}))*sort.dir});
+    return r.map(x=>`<tr><td class="font-mono">${esc(x.roll_no)}</td><td>${esc(x.name)}</td><td>${x.internal??'-'}</td><td>${x.external??'-'}</td><td><b>${x.total??'-'}</b></td><td>${gtag(x.grade)}</td><td class="muted">${x.grade_point??'-'}</td><td class="${x.attendance_pct!=null&&x.attendance_pct<75?'':'muted'}" style="${x.attendance_pct!=null&&x.attendance_pct<75?'color:var(--bad)':''}">${x.attendance_pct==null?'-':x.attendance_pct+'%'}</td></tr>`).join('')||'<tr><td colspan="8" class="faint">No matches</td></tr>'};
+  const head=[['roll_no','Roll'],['name','Name'],['internal',`Internal /${g.course.internal_max}`],['external',`External /${g.course.external_max}`],['total','Total'],['grade','Grade'],['grade_point','GP'],['attendance_pct','Attendance']];
+  openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><div class="flex justify-between gap-3"><div><h3 class="font-semibold">Gradebook - ${esc(g.course.code)} ${esc(g.course.name)}</h3><div class="flex flex-wrap gap-2 mt-2 text-xs"><span class="chip">${sm.graded}/${sm.students} graded</span><span class="chip">Average ${sm.average??'-'}</span><span class="chip">High ${sm.highest??'-'}</span><span class="chip">Low ${sm.lowest??'-'}</span><span class="chip on">Pass ${sm.pass_pct==null?'-':sm.pass_pct+'%'}</span></div></div><button class="btn h-fit" onclick="closeModal()">Close</button></div>
+    <div class="flex gap-2 mt-3"><input id="gbq" class="px-3 py-1.5 text-sm flex-1" placeholder="Search name or roll" autofocus><button class="btn" id="gbCsv">Export CSV</button></div></div>
+    <div class="scroll flex-1"><table><thead><tr>${head.map(([k,l])=>`<th><button data-sort="${k}" class="font-semibold" title="Sort">${l}</button></th>`).join('')}</tr></thead><tbody id="gbBody">${body()}</tbody></table></div>`,'940px');
+  $('#gbq').oninput=e=>{q=e.target.value.trim().toLowerCase();$('#gbBody').innerHTML=body()};
+  $$('[data-sort]').forEach(b=>b.onclick=()=>{sort={k:b.dataset.sort,dir:sort.k===b.dataset.sort?-sort.dir:1};$('#gbBody').innerHTML=body()});
+  $('#gbCsv').onclick=()=>download(`${g.course.code}_gradebook.csv`,'roll_no,name,internal,external,total,grade,grade_point,attendance_pct\n'+g.rows.map(r=>[r.roll_no,r.name,r.internal,r.external,r.total,r.grade,r.grade_point,r.attendance_pct].map(csvCell).join(',')).join('\n'))}
+$('#gbBtn').onclick=openGradebook;
+
+async function openRules(){
+  if(!S.off)return;let cfg;try{S.rules=null;cfg=await getRules()}catch(e){return toast(e.message)}
+  let rules=cfg.rules.map(r=>({...r}));
+  const draw=()=>{$('#rulesBody').innerHTML=rules.map((r,i)=>`<div class="grid gap-2 items-center mb-2" style="grid-template-columns:1fr 1fr 1fr 36px"><input aria-label="Grade" class="px-2 py-1.5" value="${esc(r.grade)}" data-f="grade:${i}" maxlength="3"><input aria-label="Minimum percent" type="number" min="0" max="100" step="1" class="px-2 py-1.5" value="${r.min}" data-f="min:${i}" ${i===rules.length-1?'disabled title="Lowest band always starts at 0"':''}><input aria-label="Grade points" type="number" min="0" max="10" step="1" class="px-2 py-1.5" value="${r.points}" data-f="points:${i}"><button class="btn danger" style="padding:4px" data-rm="${i}" aria-label="Remove band" ${rules.length<=2?'disabled':''}>&times;</button></div>`).join('')};
+  openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><div class="flex justify-between gap-3"><div><h3 class="font-semibold">Auto-grade rules - ${esc(S.dash.courses.find(c=>c.offering_id===S.off).code)}</h3><p class="text-xs muted mt-0.5">Grade bands use the minimum percentage of the total. Saving re-grades every result of this course.</p></div><button class="btn h-fit" onclick="closeModal()">Close</button></div></div>
+    <div class="p-5 scroll"><div class="grid grid-cols-2 gap-3 mb-4"><label class="text-xs muted">Internal marks (max)<input id="imax" type="number" min="0" max="500" class="w-full px-2 py-1.5 mt-1" value="${cfg.internal_max}"></label><label class="text-xs muted">External marks (max)<input id="emax" type="number" min="1" max="500" class="w-full px-2 py-1.5 mt-1" value="${cfg.external_max}"></label></div>
+    <div class="grid gap-2 text-[11px] faint mb-1" style="grid-template-columns:1fr 1fr 1fr 36px"><span>Grade</span><span>Min %</span><span>Grade points</span><span></span></div><div id="rulesBody"></div>
+    <button class="btn mt-1" id="addBand">+ Add band</button><p id="rulesErr" class="text-xs mt-3 hidden" style="color:var(--bad)" role="alert"></p></div>
+    <div class="p-4 border-t flex justify-end gap-2" style="border-color:var(--border)"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="saveRules">Save &amp; regrade</button></div>`,'560px');
+  draw();
+  $('#rulesBody').addEventListener('input',e=>{const f=e.target.dataset.f;if(!f)return;const[k,i]=f.split(':');rules[+i][k]=k==='grade'?e.target.value:Number(e.target.value)});
+  $('#rulesBody').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(b){rules.splice(+b.dataset.rm,1);draw()}});
+  $('#addBand').onclick=()=>{const l=rules.pop();rules.push({grade:'N',min:Math.max(1,Math.round((rules[rules.length-1]?.min||50)/2)),points:Math.max(0,(rules[rules.length-1]?.points||5)-1)},l);draw()};
+  $('#saveRules').onclick=async()=>{$('#rulesErr').classList.add('hidden');
+    try{const r=await API.put(`/api/teacher/offerings/${S.off}/grade-rules`,{rules,internal_max:+$('#imax').value,external_max:+$('#emax').value});S.rules=null;closeModal();toast(`Rules saved - ${r.regraded} result${r.regraded===1?'':'s'} re-graded`);loadAnalytics()}
+    catch(e){$('#rulesErr').textContent=e.message;$('#rulesErr').classList.remove('hidden')}}}
+$('#rulesBtn').onclick=openRules;
+
+/* ---------- integrity ---------- */
+function renderIntegrity(){
+  const a=S.alerts,el=$('#integrity');$('#resolveAll').disabled=!a.length||!isCur();
+  if(!a.length){el.innerHTML=`<div class="rounded-lg px-3 py-2 text-xs font-semibold" style="background:var(--goodbg);color:var(--accent)">All clear - no duplicate records found.</div>`;return}
+  el.innerHTML=`<div class="rounded-lg px-3 py-2 text-xs font-bold tracking-wide" style="background:var(--badbg);color:var(--bad)">INTEGRITY ALERT: ${a.length} Potential Duplicate${a.length===1?'':'s'} Detected.</div>`+
+   a.map(x=>`<div class="text-xs flex items-start gap-2" data-aid="${esc(x.id)}"><span class="mt-0.5" style="color:var(--warn)">&#9679;</span><div class="flex-1 min-w-0 muted">${esc(x.message)} <button class="underline font-semibold" style="color:var(--accent2)" data-review="${esc(x.id)}">${x.kind==='name_clash'?'Verify':'Review'}</button></div></div>`).join('')}
+async function loadIntegrity(){try{S.alerts=(await API.get('/api/teacher/integrity')).alerts;renderIntegrity()}catch(e){}}
+function confirmAlert(a){
+  const dup=a.kind==='duplicate_enrollment';
+  openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><h3 class="font-semibold">${dup?'Review duplicate enrollment':'Verify possible duplicate student'}</h3></div>
+   <div class="p-5 text-sm space-y-3"><p>${esc(a.message)}</p><p class="muted text-xs">${dup?'Resolving removes the later (redundant) enrollment together with its attendance and result rows. The earlier completed record is kept.':'Verifying records that you checked these two profiles and they are different students. The alert will not appear again.'}</p></div>
+   <div class="p-4 border-t flex justify-end gap-2" style="border-color:var(--border)"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="doRes" autofocus>${dup?'Remove duplicate':'They are different students'}</button></div>`,'520px');
+  $('#doRes').onclick=async()=>{try{await API.post(`/api/teacher/integrity/${encodeURIComponent(a.id)}/resolve`);closeModal();const row=$(`[data-aid="${CSS.escape(a.id)}"]`);row&&row.classList.add('fade');setTimeout(()=>{loadIntegrity();loadDash(true)},260);toast(dup?'Duplicate enrollment removed':'Marked as verified')}catch(e){toast(e.message)}}}
+$('#integrity').addEventListener('click',e=>{const b=e.target.closest('[data-review]');if(b)confirmAlert(S.alerts.find(a=>a.id===b.dataset.review))});
+$('#resolveAll').onclick=()=>{openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><h3 class="font-semibold">Resolve all ${S.alerts.length} alerts?</h3></div><div class="p-5 text-sm muted space-y-2"><p>Duplicate enrollments will be removed and look-alike names will be marked as verified.</p><ul class="list-disc pl-5">${S.alerts.map(a=>`<li>${esc(a.message)}</li>`).join('')}</ul></div><div class="p-4 border-t flex justify-end gap-2" style="border-color:var(--border)"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="doAll" autofocus>Resolve all</button></div>`,'560px');
+  $('#doAll').onclick=async()=>{try{const r=await API.post('/api/teacher/integrity/resolve-all');closeModal();toast(`${r.resolved} alert${r.resolved===1?'':'s'} resolved`);loadIntegrity();loadDash(true)}catch(e){toast(e.message)}}};
+
+/* ---------- radar + bars ---------- */
+function renderAnalytics(){
+  const A=S.an;if(!A){$('#radar').innerHTML='';$('#bars').innerHTML='';return}
+  const cc=A.course.code,dc=A.dept.code+' Department Average';
+  $('#legend').innerHTML=`<button class="chip ${S.hide.course?'':'on'}" data-leg="course" aria-pressed="${!S.hide.course}"><span style="color:var(--accent2)">&#9632;</span> ${esc(cc)} - ${esc(A.course.name)}</button><button class="chip ${S.hide.dept?'':'on'}" data-leg="dept" aria-pressed="${!S.hide.dept}"><span style="color:var(--gray)">&#9632;</span> ${esc(dc)}</button>`;
+  const W=430,H=270,cx=W/2,cy=138,R=88,n=A.radar.length,ang=i=>-Math.PI/2+i*2*Math.PI/n,pt=(i,v)=>[cx+R*v/100*Math.cos(ang(i)),cy+R*v/100*Math.sin(ang(i))];
+  const poly=(k,col,op)=>`<polygon points="${A.radar.map((a,i)=>pt(i,a[k]).map(x=>x.toFixed(1)).join(',')).join(' ')}" fill="${col}" fill-opacity="${op}" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
+  const dots=(k,col)=>A.radar.map((a,i)=>{const[x,y]=pt(i,a[k]);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${col}"><title>${esc(a.axis)}: ${a[k]}${i===1?'%':''} (${k==='course'?esc(cc):esc(dc)})</title></circle>`}).join('');
+  const rings=[20,40,60,80,100].map(v=>`<polygon points="${A.radar.map((_,i)=>pt(i,v).map(x=>x.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="var(--grid)"/>`).join('');
+  const spokes=A.radar.map((_,i)=>{const[x,y]=pt(i,100);return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--grid)"/>`}).join('');
+  const labels=A.radar.map((a,i)=>{const[x,y]=pt(i,122),anc=Math.abs(x-cx)<8?'middle':x>cx?'start':'end';
+    return `<text x="${x.toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="${anc}" font-size="10.5" fill="var(--muted)">${i+1}. ${esc(a.axis)}</text><text x="${x.toFixed(1)}" y="${(y+15).toFixed(1)}" text-anchor="${anc}" font-size="10" fill="var(--faint)">${S.hide.course?'':a.course}${!S.hide.course&&!S.hide.dept?' / ':''}${S.hide.dept?'':a.dept}</text>`}).join('');
+  $('#radar').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Radar comparing ${esc(cc)} with the department average">${rings}${spokes}${S.hide.dept?'':poly('dept','var(--gray)',.22)}${S.hide.course?'':poly('course','var(--accent2)',.38)}${S.hide.dept?'':dots('dept','var(--gray)')}${S.hide.course?'':dots('course','var(--accent2)')}${labels}</svg>`;
+  renderBars();
+  $('#passCap').innerHTML=`Pass/Fail Ratio Comparison: <b style="color:var(--accent)">${esc(cc)} (${A.pass.course}% Pass)</b> vs Dept (${A.pass.dept}% Pass)`}
+function renderBars(){
+  const A=S.an,W=430,H=120,L=8,B=22,T=8;let groups;
+  if(S.tab==='grades')groups=A.grades.map(g=>({label:g.grade,a:g.course_pct,b:g.dept_pct,tip:`${g.grade}: ${g.count} student(s)`}));
+  else groups=A.peers.map(p=>({label:p.code,a:p.is_selected?p.pass_pct:null,b:p.is_selected?null:p.pass_pct,tip:`${p.code}: ${p.pass_pct}% pass, average ${p.avg_marks}`}));
+  if(!groups.length){$('#bars').innerHTML='<p class="text-xs faint">No results yet.</p>';return}
+  const mx=Math.max(10,...groups.flatMap(g=>[g.a||0,g.b||0])),gw=(W-L*2)/groups.length,bw=Math.min(18,gw/2.6),y=v=>T+(1-v/mx)*(H-T-B);
+  $('#bars').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Bar chart">${[0,.5,1].map(f=>`<line x1="${L}" x2="${W-L}" y1="${y(mx*f)}" y2="${y(mx*f)}" stroke="var(--grid)"/>`).join('')}
+   ${groups.map((g,i)=>{const x=L+i*gw+gw/2,two=S.tab==='grades';return `<g><title>${esc(g.tip)}</title>
+     ${g.a!=null?`<rect x="${(two?x-bw-1:x-bw/2).toFixed(1)}" y="${y(g.a)}" width="${bw}" height="${(H-B-y(g.a)).toFixed(1)}" rx="3" fill="var(--accent)" ${S.hide.course&&two?'opacity=".15"':''}/>`:''}
+     ${g.b!=null?`<rect x="${(two?x+1:x-bw/2).toFixed(1)}" y="${y(g.b)}" width="${bw}" height="${(H-B-y(g.b)).toFixed(1)}" rx="3" fill="var(--gray)" ${S.hide.dept&&two?'opacity=".15"':''}/>`:''}
+     <text x="${x}" y="${H-7}" text-anchor="middle" font-size="9.5" fill="var(--faint)">${esc(g.label)}</text></g>`}).join('')}</svg>`}
+$('#legend').addEventListener('click',e=>{const b=e.target.closest('[data-leg]');if(!b)return;const k=b.dataset.leg,other=k==='course'?'dept':'course';
+  if(!S.hide[k]&&S.hide[other])return;S.hide[k]=!S.hide[k];renderAnalytics()});
+$$('[data-tab]').forEach(b=>b.onclick=()=>{S.tab=b.dataset.tab;$$('[data-tab]').forEach(x=>x.classList.toggle('on',x===b));renderBars()});
+async function loadAnalytics(){if(!S.off)return;try{S.an=await API.get(`/api/teacher/offerings/${S.off}/analytics`);renderAnalytics()}catch(e){toast(e.message)}}
+
+/* ---------- orchestration ---------- */
+async function loadDash(keepCourse){
+  S.dash=await API.get('/api/teacher/dashboard?semester_id='+S.sem);S.readonly=!S.dash.semester.is_current;
+  $('#pName').textContent=`${S.dash.profile.name} - ${S.dash.profile.department}`;$('#pAvatar').textContent=initials(S.dash.profile.name);$('#pAvatar').style.background=`hsl(${hue(S.dash.profile.name)} 50% 42%)`;
+  renderKpis();const cs=S.dash.courses;
+  $('#courseSel').innerHTML=cs.map(c=>`<option value="${c.offering_id}">${esc(c.code)} - ${esc(c.name)} (${c.enrolled})</option>`).join('')||'<option value="">No courses this semester</option>';
+  if(!keepCourse||!cs.some(c=>c.offering_id===S.off))S.off=cs.length?(cs.find(c=>c.code==='CS301')||cs[0]).offering_id:null;
+  $('#courseSel').value=S.off??'';
+  if(!S.off){S.roster=null;S.an=null;renderRoster();renderAnalytics();$('#hubCourse').textContent='';$('#lastUp').textContent='Last Upload: -';$('#upStatus').textContent='';renderFb();return}
+  await Promise.all([loadRoster(keepCourse?S.date:null),loadAnalytics(),loadUpload()])}
+async function selectCourse(id){S.off=id;S.rules=null;S.sel=null;await Promise.all([loadRoster(),loadAnalytics(),loadUpload()])}
+async function init(){
+  setTheme(store('saras-theme')||'dark');
+  try{S.semesters=await API.get('/api/semesters')}catch(e){}
+  const cur=S.semesters.find(s=>s.is_current);S.sem=cur?cur.id:null;
+  const opts=S.semesters.slice().reverse().map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  ['#semSel','#semSelM'].forEach(id=>{$(id).innerHTML=opts;$(id).value=S.sem;$(id).onchange=async e=>{await flush();S.sem=+e.target.value;$('#semSel').value=$('#semSelM').value=S.sem;
+    try{await loadDash(false);if(isCur())loadIntegrity();else{S.alerts=[];renderIntegrity()}}catch(x){toast(x.message)}}});
+  try{await loadDash(false);await loadIntegrity()}catch(e){if(e.message!=='Signed out')toast('Could not load dashboard: '+e.message)}}
+
+/* ---------- events ---------- */
+$('#courseSel').onchange=async e=>{await flush();selectCourse(+e.target.value)};
+$('#dateSel').onchange=async e=>{await flush();loadRoster(e.target.value)};
+$('#search').addEventListener('input',e=>{S.q=e.target.value.trim();renderRoster()});
+$('#rosterQ').addEventListener('input',e=>{S.rq=e.target.value.trim();renderRoster()});
+$('#rosterQ').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const v=e.target.value.trim().toLowerCase();if((v==='p'||v==='a')&&S.sel!=null){setStatus(S.sel,v.toUpperCase());e.target.value='';S.rq='';renderRoster()}
+    else if(shown().length===1){S.sel=shown()[0].enrollment_id;renderRoster()}}});
+$('#roster').addEventListener('click',e=>{const row=e.target.closest('[data-eid]');if(!row)return;const eid=+row.dataset.eid;S.sel=eid;
+  const b=e.target.closest('[data-set]');if(b)setStatus(eid,b.dataset.set);else renderRoster()});
+$('#allP').onclick=()=>bulk(()=>'P');$('#restA').onclick=()=>bulk(s=>s.status||'A');$('#clearAll').onclick=()=>{if(confirm('Clear all attendance marks for this class date?'))bulk(()=>null)};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();return}
+  const tag=document.activeElement.tagName;if(modalOpen()||/INPUT|TEXTAREA|SELECT/.test(tag)){return}
+  if(e.key==='/'){e.preventDefault();$('#search').focus();return}
+  if(!S.roster)return;const list=shown(),idx=list.findIndex(s=>s.enrollment_id===S.sel);
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!list.length)return;const ni=Math.max(0,Math.min(list.length-1,idx<0?0:idx+(e.key==='ArrowDown'?1:-1)));S.sel=list[ni].enrollment_id;renderRoster();$(`[data-eid="${S.sel}"]`)?.scrollIntoView({block:'nearest'});return}
+  const k=e.key.toLowerCase();if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(k==='p'&&e.shiftKey){e.preventDefault();bulk(()=>'P');return}
+  if((k==='p'||k==='a')&&S.sel!=null){e.preventDefault();setStatus(S.sel,k.toUpperCase());return}
+  if(e.key===' '&&S.sel!=null){e.preventDefault();const s=S.roster.students.find(x=>x.enrollment_id===S.sel);if(s)setStatus(S.sel,s.status==='P'?'A':'P')}});
+$('#profileBtn').onclick=e=>{e.stopPropagation();$('#profileMenu').classList.toggle('hidden')};document.addEventListener('click',()=>$('#profileMenu').classList.add('hidden'));
+$('#menuLogout').onclick=async()=>{if(API.demo){location.href='index.html';return}await flush();await API.post('/api/logout');location.href='/login'};
+$('#themeSwitch').onclick=()=>setTheme(document.documentElement.classList.contains('light')?'dark':'light');
+window.addEventListener('beforeunload',()=>{if(S.pending.size){const marks=[...S.pending].map(([enrollment_id,status])=>({enrollment_id,status}));try{fetch(`/api/teacher/offerings/${S.off}/attendance`,{method:'PUT',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({date:S.date,marks})})}catch(e){}}});
+init();
+</script>
+</body>
+</html>

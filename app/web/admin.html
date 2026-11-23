@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SARAS - Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--bg:#09090B;--card:rgba(24,24,27,.72);--solid:#141417;--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);--text:#e4e4e7;--muted:#a1a1aa;--faint:#71717a;--accent:#34d399;--accent2:#22d3ee;--warn:#fbbf24;--bad:#f87171;--chip:rgba(255,255,255,.05);--grid:rgba(255,255,255,.09);--glow:rgba(52,211,153,.13);--badbg:rgba(248,113,113,.13);--goodbg:rgba(52,211,153,.12)}
+html.light{--bg:#f4f5f7;--card:rgba(255,255,255,.9);--solid:#fff;--border:rgba(15,23,42,.1);--border2:rgba(15,23,42,.2);--text:#18181b;--muted:#52525b;--faint:#71717a;--accent:#059669;--accent2:#0e7490;--warn:#b45309;--bad:#dc2626;--chip:rgba(15,23,42,.05);--grid:rgba(15,23,42,.1);--glow:rgba(5,150,105,.1);--badbg:rgba(220,38,38,.08);--goodbg:rgba(5,150,105,.1)}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}
+body{min-height:100vh;padding-bottom:64px;background-image:radial-gradient(900px 380px at 12% -8%,var(--glow),transparent 60%)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(14px)}
+.muted{color:var(--muted)}.faint{color:var(--faint)}
+.chip{background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:5px 14px;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s}
+.chip:hover{color:var(--text)}.chip.on{color:var(--text);border-color:var(--accent);background:var(--goodbg)}
+.btn{background:var(--chip);border:1px solid var(--border2);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--accent);color:var(--accent)}.btn.primary{background:var(--accent);color:#04130d;border-color:var(--accent)}.btn.primary:hover{filter:brightness(1.08);color:#04130d}.btn.danger:hover{border-color:var(--bad);color:var(--bad)}.btn:disabled{opacity:.45}
+select,input{background:var(--chip);border:1px solid var(--border);color:var(--text);border-radius:10px;outline:none;font-size:13px;padding:7px 10px;width:100%}
+select option{background:var(--solid);color:var(--text)}
+select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+table{border-collapse:collapse;width:100%}th{text-align:left;font-size:11px;color:var(--faint);font-weight:600;padding:8px 10px}td{padding:8px 10px;font-size:13px;border-top:1px solid var(--border)}
+.scroll{overflow:auto;scrollbar-width:thin}
+.toast{position:fixed;left:50%;bottom:76px;transform:translateX(-50%) translateY(20px);background:var(--solid);border:1px solid var(--border2);padding:9px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:80}.toast.show{opacity:1;transform:translateX(-50%)}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}.modal-bg.open{display:flex}
+.modal{background:var(--solid);border:1px solid var(--border2);border-radius:18px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column}
+.switch{width:44px;height:24px;border-radius:99px;background:var(--chip);border:1px solid var(--border2);position:relative;cursor:pointer}.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:99px;background:var(--text);transition:.2s}html.light .switch::after{left:22px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="sticky top-0 z-40 border-b" style="background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);border-color:var(--border)">
+  <div class="max-w-[1300px] mx-auto px-4 py-3 flex items-center gap-4">
+    <a href="/" class="flex items-center gap-2"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><path d="M22 8.5c-1.6-1.8-3.8-2.7-6.4-2.7-3.6 0-6 1.8-6 4.5 0 6.1 12.8 3.2 12.8 9.8 0 3.1-2.9 5.1-6.7 5.1-3 0-5.5-1.1-7.2-3.1" fill="none" stroke="url(#lg)" stroke-width="3.4" stroke-linecap="round"/></svg><span class="font-semibold tracking-[.32em] text-lg">SARAS</span></a>
+    <span class="text-sm muted">Administration</span>
+    <button id="logout" class="btn ml-auto">Sign out</button>
+  </div>
+</header>
+<main class="max-w-[1300px] mx-auto px-4 py-5 space-y-4">
+  <nav class="flex flex-wrap gap-2" id="tabs" aria-label="Sections">
+    <button class="chip on" data-t="overview">Overview</button><button class="chip" data-t="students">Students</button><button class="chip" data-t="faculty">Faculty</button><button class="chip" data-t="courses">Courses</button><button class="chip" data-t="departments">Departments</button><button class="chip" data-t="database">Database</button><button class="chip" data-t="integrity">Data integrity</button>
+  </nav>
+  <section id="view"></section>
+</main>
+<footer class="fixed bottom-0 inset-x-0 z-30 border-t" style="background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px);border-color:var(--border)"><div class="max-w-[1300px] mx-auto px-4 py-3 flex items-center justify-center gap-3 text-sm"><button id="themeSwitch" class="switch" role="switch" aria-checked="false" aria-label="Toggle light and dark theme"></button><span id="themeLabel" class="muted">Dark theme - click to switch</span></div></footer>
+<div id="modal" class="modal-bg" role="dialog" aria-modal="true"><div class="modal" id="modalBox"></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const API=window.SARAS_DEMO_API||{async req(m,u,b){const r=await fetch(u,{method:m,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});if(r.status===401){location.href='/login';throw new Error('Signed out')}const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.error||r.statusText),{status:r.status,data:j});return j},get(u){return this.req('GET',u)},post(u,b){return this.req('POST',u,b||{})},del(u){return this.req('DELETE',u)}};
+let tt;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2800)};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function setTheme(t){document.documentElement.classList.toggle('light',t==='light');document.documentElement.classList.toggle('dark',t!=='light');$('#themeSwitch').setAttribute('aria-checked',t==='light');$('#themeLabel').textContent=t==='light'?'Light theme - click to switch':'Dark theme - click to switch';store('saras-theme',t)}
+const openModal=h=>{$('#modalBox').innerHTML=h;$('#modal').classList.add('open');const f=$('#modalBox [autofocus]');f&&f.focus()},closeModal=()=>$('#modal').classList.remove('open');
+$('#modal').addEventListener('mousedown',e=>{if(e.target.id==='modal')closeModal()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+let tab='overview',depts=[],page=1,q='';
+const field=(id,label,type='text',extra='')=>`<label class="block text-xs muted">${label}<input id="${id}" type="${type}" ${extra} class="mt-1"></label>`;
+const deptSel=id=>depts.length?`<label class="block text-xs muted">Department<select id="${id}" class="mt-1">${depts.map(d=>`<option value="${d.id}">${esc(d.code)} - ${esc(d.name)}</option>`).join('')}</select></label>`:`<div class="text-xs p-3 rounded-lg" style="color:var(--bad);border:1px solid var(--bad)">There are no departments yet. Close this window, open the <b>Departments</b> tab, add one, then come back.<input id="${id}" type="hidden" value=""></div>`;
+function form(title,body,onSave){openModal(`<div class="p-5 border-b" style="border-color:var(--border)"><h3 class="font-semibold">${title}</h3></div><div class="p-5 space-y-3 scroll">${body}<p id="ferr" class="text-xs hidden" style="color:var(--bad)" role="alert"></p></div><div class="p-4 border-t flex justify-end gap-2" style="border-color:var(--border)"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" id="fsave">Save</button></div>`);
+  $('#fsave').onclick=async()=>{try{await onSave();closeModal()}catch(e){$('#ferr').textContent=e.message;$('#ferr').classList.remove('hidden');toast(e.message)}}}
+const confirmDel=(msg,fn)=>{if(confirm(msg))fn().catch(e=>toast(e.message))};
+
+async function overview(){
+  const o=await API.get('/api/admin/overview');
+  const kp=(l,v)=>`<div class="card p-4"><div class="text-xs muted">${l}</div><div class="text-2xl font-bold mt-1">${v}</div></div>`;
+  const mx=Math.max(1,...o.enrollment_trend.map(t=>t.value));
+  $('#view').innerHTML=`<div class="grid grid-cols-2 md:grid-cols-4 gap-4">${kp('Students',o.counts.students)}${kp('Faculty',o.counts.faculty)}${kp('Courses',o.counts.courses)}${kp('Enrollments - '+esc(o.semester),o.counts.enrollments)}</div>
+  <div class="grid lg:grid-cols-5 gap-4 mt-4"><div class="card p-4 lg:col-span-3"><h2 class="text-sm font-semibold mb-2">Department performance - ${esc(o.semester)}</h2><div class="scroll"><table><thead><tr><th>Dept</th><th>Students</th><th>Faculty</th><th>Courses</th><th>Avg marks</th><th>Pass %</th><th>Attendance</th></tr></thead><tbody>${o.departments.map(d=>`<tr><td><b>${esc(d.code)}</b> <span class="faint">${esc(d.name)}</span></td><td>${d.students}</td><td>${d.faculty}</td><td>${d.courses}</td><td>${d.avg_marks??'-'}</td><td>${d.pass_pct==null?'-':d.pass_pct+'%'}</td><td>${d.attendance==null?'-':d.attendance+'%'}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card p-4 lg:col-span-2"><h2 class="text-sm font-semibold mb-3">Enrollments per semester</h2><div class="flex items-end gap-3 h-40">${o.enrollment_trend.map(t=>`<div class="flex-1 flex flex-col items-center justify-end h-full gap-1" title="${esc(t.label)}: ${t.value}"><span class="text-[10px] faint">${t.value}</span><div style="height:${t.value/mx*100}%;min-height:3px;width:100%;border-radius:6px 6px 0 0;background:linear-gradient(var(--accent),var(--accent2))"></div><span class="text-[10px] faint whitespace-nowrap">${esc(t.label.replace('Fall ','F').replace('Spring ','S'))}</span></div>`).join('')}</div></div></div>
+  <div class="card p-4 mt-4"><h2 class="text-sm font-semibold mb-1">Attendance shortage (below ${o.min_attendance}%): <span style="color:var(--bad)">${o.shortage_count}</span> student-course pairs</h2><div class="scroll"><table><thead><tr><th>Roll</th><th>Name</th><th>Course</th><th>Attendance</th></tr></thead><tbody>${o.shortage_sample.map(s=>`<tr><td class="font-mono">${esc(s.roll_no)}</td><td>${esc(s.name)}</td><td>${esc(s.course)}</td><td style="color:var(--bad)">${s.percent}%</td></tr>`).join('')||'<tr><td colspan="4" class="faint">None</td></tr>'}</tbody></table></div></div>`}
+
+async function students(){
+  const d=await API.get(`/api/admin/students?page=${page}&q=${encodeURIComponent(q)}`);const pages=Math.max(1,Math.ceil(d.total/d.per_page));
+  $('#view').innerHTML=`<div class="card p-4"><div class="flex flex-wrap gap-2 mb-3"><input id="sq" class="max-w-xs" placeholder="Search name, roll or dept" value="${esc(q)}"><button class="btn primary ml-auto" id="addS">+ Add student</button><button class="btn" id="enrS">Enroll student in course</button></div>
+  <div class="scroll"><table><thead><tr><th>Roll</th><th>Name</th><th>Email</th><th>Dept</th><th>Year</th><th></th></tr></thead><tbody>${d.items.map(s=>`<tr><td class="font-mono">${esc(s.roll_no)}</td><td>${esc(s.name)}</td><td class="muted">${esc(s.email)}</td><td>${esc(s.department)}</td><td>${s.admission_year}</td><td class="text-right"><button class="btn danger" data-del="${s.id}" data-n="${esc(s.name)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="faint">No students</td></tr>'}</tbody></table></div>
+  <div class="flex items-center justify-between mt-3 text-xs muted"><span>${d.total} students</span><div class="flex gap-2 items-center"><button class="btn" id="pv" ${page<=1?'disabled':''}>Prev</button><span>Page ${page} / ${pages}</span><button class="btn" id="nx" ${page>=pages?'disabled':''}>Next</button></div></div></div>`;
+  let t;$('#sq').oninput=e=>{clearTimeout(t);t=setTimeout(()=>{q=e.target.value.trim();page=1;students().then(()=>{const i=$('#sq');i.focus();i.setSelectionRange(99,99)})},300)};
+  $('#pv').onclick=()=>{page--;students()};$('#nx').onclick=()=>{page++;students()};
+  $$('[data-del]').forEach(b=>b.onclick=()=>confirmDel(`Delete ${b.dataset.n} and all their enrollments, attendance and results?`,async()=>{await API.del('/api/admin/students/'+b.dataset.del);toast('Student deleted');students()}));
+  $('#addS').onclick=()=>form('Add student',`${field('f_roll','Roll number')}${field('f_name','Full name')}${field('f_email','Email','email')}${deptSel('f_dept')}${field('f_year','Admission year','number','value="2025" min="2015" max="2030"')}${field('f_pw','Initial password (min 6)','password')}<p class="text-xs faint">The student signs in with their roll number as username.</p>`,async()=>{await API.post('/api/admin/students',{roll_no:$('#f_roll').value,name:$('#f_name').value,email:$('#f_email').value,department_id:+$('#f_dept').value,admission_year:+$('#f_year').value,password:$('#f_pw').value});toast('Student added');students()});
+  $('#enrS').onclick=async()=>{const [st,co]=await Promise.all([API.get('/api/admin/students?q=&page=1'),API.get('/api/admin/courses')]);
+    form('Enroll a student',`${field('e_roll','Student roll number')}<label class="block text-xs muted">Course (${esc(co.semester)})<select id="e_off" class="mt-1">${co.items.filter(c=>c.offering_id).map(c=>`<option value="${c.offering_id}">${esc(c.code)} - ${esc(c.name)}</option>`).join('')}</select></label>`,async()=>{
+      const r=await API.get('/api/admin/students?q='+encodeURIComponent($('#e_roll').value.trim()));const s=r.items.find(x=>x.roll_no===$('#e_roll').value.trim());if(!s)throw new Error('No student with that roll number.');
+      const body={student_id:s.id,offering_id:+$('#e_off').value};try{await API.post('/api/admin/enrollments',body)}catch(e){if(e.data&&e.data.code==='clash'&&confirm(e.message+'\nEnroll anyway?'))await API.post('/api/admin/enrollments',{...body,allow_clash:true});else throw e}toast('Enrolled')})}}
+
+async function faculty(){
+  const f=await API.get('/api/admin/faculty');
+  $('#view').innerHTML=`<div class="card p-4"><div class="flex mb-3"><button class="btn primary ml-auto" id="addF">+ Add faculty</button></div><div class="scroll"><table><thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Dept</th><th>Designation</th><th></th></tr></thead><tbody>${f.map(x=>`<tr><td>${esc(x.name)}</td><td class="font-mono">${esc(x.username)}</td><td class="muted">${esc(x.email)}</td><td>${esc(x.department)}</td><td class="muted">${esc(x.designation)}</td><td class="text-right"><button class="btn danger" data-del="${x.id}" data-n="${esc(x.name)}">Delete</button></td></tr>`).join('')}</tbody></table></div></div>`;
+  $$('[data-del]').forEach(b=>b.onclick=()=>confirmDel(`Delete ${b.dataset.n}?`,async()=>{await API.del('/api/admin/faculty/'+b.dataset.del);toast('Faculty deleted');faculty()}));
+  $('#addF').onclick=()=>form('Add faculty',`${field('f_name','Full name')}${field('f_user','Username')}${field('f_email','Email','email')}${deptSel('f_dept')}${field('f_des','Designation','text','value="Assistant Professor"')}${field('f_pw','Initial password','password')}`,async()=>{await API.post('/api/admin/faculty',{name:$('#f_name').value,username:$('#f_user').value,email:$('#f_email').value,department_id:+$('#f_dept').value,designation:$('#f_des').value,password:$('#f_pw').value});toast('Faculty added');faculty()})}
+
+async function courses(){
+  const c=await API.get('/api/admin/courses');
+  $('#view').innerHTML=`<div class="card p-4"><div class="flex mb-3 items-center"><span class="text-xs muted">Offerings for ${esc(c.semester)}</span><button class="btn primary ml-auto" id="addC">+ Add course</button></div><div class="scroll"><table><thead><tr><th>Code</th><th>Name</th><th>Dept</th><th>Credits</th><th>Faculty (this semester)</th><th>Enrolled</th></tr></thead><tbody>${c.items.map(x=>`<tr><td><b>${esc(x.code)}</b></td><td>${esc(x.name)}</td><td>${esc(x.department)}</td><td>${x.credits}</td><td class="muted">${esc(x.faculty||'Not offered')}</td><td>${x.enrolled}</td></tr>`).join('')}</tbody></table></div></div>`;
+  $('#addC').onclick=async()=>{const fac=await API.get('/api/admin/faculty');
+    form('Add course (offered this semester)',`${field('c_code','Course code (e.g. CS350)')}${field('c_name','Course name')}${deptSel('c_dept')}${fac.length?`<label class="block text-xs muted">Faculty<select id="c_fac" class="mt-1">${fac.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select></label>`:`<div class="text-xs p-3 rounded-lg" style="color:var(--bad);border:1px solid var(--bad)">There is no faculty member yet. Add one in the <b>Faculty</b> tab first.<input id="c_fac" type="hidden" value=""></div>`}<div class="grid grid-cols-2 gap-3">${field('c_cr','Credits','number','value="3" min="1" max="6"')}${field('c_cap','Seats','number','value="60" min="1"')}</div>
+    <div class="grid grid-cols-4 gap-2 items-end"><label class="text-xs muted col-span-1">Day<select id="s_day" class="mt-1">${['Mon','Tue','Wed','Thu','Fri'].map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></label>${field('s_st','Start','time','value="09:30"')}${field('s_en','End','time','value="11:00"')}${field('s_rm','Room','text','value="R-101"')}</div>`,async()=>{
+      await API.post('/api/admin/courses',{code:$('#c_code').value,name:$('#c_name').value,department_id:+$('#c_dept').value,faculty_id:+$('#c_fac').value,credits:+$('#c_cr').value,capacity:+$('#c_cap').value,slots:[{day:+$('#s_day').value,start:$('#s_st').value,end:$('#s_en').value,room:$('#s_rm').value}]});toast('Course added');courses()})}}
+
+async function departments(){
+  depts=await API.get('/api/admin/departments');
+  $('#view').innerHTML=`<div class="card p-4"><div class="flex mb-3"><button class="btn primary ml-auto" id="addD">+ Add department</button></div><table><thead><tr><th>Code</th><th>Name</th><th></th></tr></thead><tbody>${depts.map(d=>`<tr><td><b>${esc(d.code)}</b></td><td>${esc(d.name)}</td><td class="text-right"><button class="btn danger" data-del="${d.id}" data-n="${esc(d.code)}">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+  $$('[data-del]').forEach(b=>b.onclick=()=>confirmDel(`Delete department ${b.dataset.n}?`,async()=>{await API.del('/api/admin/departments/'+b.dataset.del);toast('Department deleted');departments()}));
+  $('#addD').onclick=()=>form('Add department',`${field('d_code','Code (e.g. ME)')}${field('d_name','Name')}`,async()=>{await API.post('/api/admin/departments',{code:$('#d_code').value,name:$('#d_name').value});toast('Department added');departments()})}
+
+async function integrity(){
+  const a=(await API.get('/api/admin/integrity')).alerts;
+  $('#view').innerHTML=`<div class="card p-4"><h2 class="text-sm font-semibold mb-3">Data Integrity Console (all departments)</h2>${a.length?a.map(x=>`<div class="flex items-center gap-3 py-2 border-t text-sm" style="border-color:var(--border)"><span class="flex-1 muted">${esc(x.message)}</span><button class="btn primary" data-res="${esc(x.id)}">${x.kind==='name_clash'?'Mark verified':'Remove duplicate'}</button></div>`).join(''):'<p class="text-sm" style="color:var(--accent)">All clear - no duplicate records found.</p>'}</div>`;
+  $$('[data-res]').forEach(b=>b.onclick=async()=>{try{await API.post('/api/admin/integrity/'+encodeURIComponent(b.dataset.res)+'/resolve');toast('Resolved');integrity()}catch(e){toast(e.message)}})}
+
+
+let dbTable='student',dbOff=0;const DBL=25;
+async function database(){
+  const L=await API.get('/api/admin/db/tables');
+  if(!L.tables.some(t=>t.name===dbTable))dbTable=L.tables[0].name;
+  const d=await API.get(`/api/admin/db/tables/${dbTable}?limit=${DBL}&offset=${dbOff}`);
+  $('#view').innerHTML=`<div style="display:grid;grid-template-columns:minmax(170px,230px) minmax(0,1fr);gap:16px;align-items:start"><div class="card p-3 self-start"><div class="text-xs muted mb-2">Tables (read-only)</div>${L.tables.map(t=>`<button class="btn w-full text-left mb-1 ${t.name===dbTable?'primary':''}" data-tb="${esc(t.name)}" style="display:flex;justify-content:space-between"><span>${esc(t.name)}</span><span class="${t.name===dbTable?'':'faint'}">${t.rows}</span></button>`).join('')}</div>
+  <div class="card p-4 min-w-0"><div class="flex items-center mb-3 gap-2"><h3 class="font-semibold">${esc(d.name)}</h3><span class="text-xs muted">${d.total} rows${d.total>DBL?` - showing ${dbOff+1}-${Math.min(dbOff+DBL,d.total)}`:''}</span><span class="ml-auto"></span><button class="btn" id="dbPv" ${dbOff<=0?'disabled':''}>Prev</button><button class="btn" id="dbNx" ${dbOff+DBL>=d.total?'disabled':''}>Next</button></div>
+  <div class="scroll" style="overflow:auto"><table><thead><tr>${d.columns.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${d.rows.map(r=>`<tr>${r.map(v=>`<td class="font-mono text-xs">${esc(v)}</td>`).join('')}</tr>`).join('')||`<tr><td class="muted" colspan="${d.columns.length}">This table is empty.</td></tr>`}</tbody></table></div></div></div>`;
+  $$('[data-tb]').forEach(b=>b.onclick=()=>{dbTable=b.dataset.tb;dbOff=0;database()});
+  $('#dbPv').onclick=()=>{dbOff=Math.max(0,dbOff-DBL);database()};$('#dbNx').onclick=()=>{dbOff+=DBL;database()}}
+const views={overview,students,faculty,courses,departments,database,integrity};
+async function show(t){tab=t;$$('#tabs .chip').forEach(c=>c.classList.toggle('on',c.dataset.t===t));if(!depts.length)try{depts=await API.get('/api/admin/departments')}catch(e){}
+  try{await views[t]()}catch(e){if(e.message!=='Signed out')$('#view').innerHTML=`<div class="card p-4" style="color:var(--bad)">${esc(e.message)}</div>`}}
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b){page=1;q='';show(b.dataset.t)}});
+$('#logout').onclick=async()=>{if(API.demo){location.href='index.html';return}await API.post('/api/logout');location.href='/login'};
+$('#themeSwitch').onclick=()=>setTheme(document.documentElement.classList.contains('light')?'dark':'light');
+setTheme(store('saras-theme')||'dark');show('overview');
+</script>
+</body>
+</html>

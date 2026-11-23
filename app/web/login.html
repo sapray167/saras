@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SARAS - Sign in</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root{--bg:#09090B;--card:rgba(24,24,27,.75);--solid:#141417;--border:rgba(255,255,255,.09);--border2:rgba(255,255,255,.18);--text:#e4e4e7;--muted:#a1a1aa;--faint:#71717a;--accent:#34d399;--chip:rgba(255,255,255,.05);--glow:rgba(52,211,153,.16);--bad:#f87171}
+html.light{--bg:#f4f5f7;--card:rgba(255,255,255,.92);--solid:#fff;--border:rgba(15,23,42,.1);--border2:rgba(15,23,42,.2);--text:#18181b;--muted:#52525b;--faint:#71717a;--accent:#059669;--chip:rgba(15,23,42,.05);--glow:rgba(5,150,105,.12);--bad:#dc2626}
+html,body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh}
+body{background-image:radial-gradient(700px 340px at 50% -10%,var(--glow),transparent 65%)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;backdrop-filter:blur(14px)}
+input{background:var(--chip);border:1px solid var(--border);color:var(--text);border-radius:10px;outline:none;width:100%;padding:10px 12px;font-size:14px}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+.btn{background:var(--accent);color:#04130d;font-weight:600;border-radius:10px;padding:10px;width:100%;transition:.15s}.btn:hover{filter:brightness(1.08)}.btn:disabled{opacity:.6}
+.demo{background:var(--chip);border:1px solid var(--border);border-radius:10px;padding:8px 10px;text-align:left;font-size:12px;cursor:pointer;transition:.15s;color:var(--muted)}.demo:hover{border-color:var(--accent);color:var(--text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body class="grid place-items-center p-4">
+<main class="w-full max-w-md">
+  <div class="flex items-center justify-center gap-2 mb-6">
+    <svg width="34" height="34" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d399"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs><path d="M22 8.5c-1.6-1.8-3.8-2.7-6.4-2.7-3.6 0-6 1.8-6 4.5 0 6.1 12.8 3.2 12.8 9.8 0 3.1-2.9 5.1-6.7 5.1-3 0-5.5-1.1-7.2-3.1" fill="none" stroke="url(#lg)" stroke-width="3.4" stroke-linecap="round"/></svg>
+    <span class="font-semibold tracking-[.32em] text-2xl">SARAS</span>
+  </div>
+  <form id="f" class="card p-6 space-y-4" novalidate>
+    <div><h1 class="text-lg font-semibold">Sign in</h1><p class="text-sm" style="color:var(--muted)">Student Course Registration &amp; Result Analytics System</p></div>
+    <div><label for="u" class="text-xs" style="color:var(--muted)">Username</label><input id="u" autocomplete="username" autofocus required></div>
+    <div><label for="p" class="text-xs" style="color:var(--muted)">Password</label><input id="p" type="password" autocomplete="current-password" required></div>
+    <p id="err" class="text-sm hidden" style="color:var(--bad)" role="alert"></p>
+    <button class="btn" id="go">Sign in</button>
+  </form>
+  <div class="mt-4">
+    <p class="text-[11px] mb-2 text-center" style="color:var(--faint)">Demo accounts (click to fill)</p>
+    <div class="grid grid-cols-3 gap-2">
+      <button type="button" class="demo" data-u="akash" data-p="akash123"><b style="color:var(--text)">Student</b><br>akash / akash123</button>
+      <button type="button" class="demo" data-u="khan" data-p="khan123"><b style="color:var(--text)">Teacher</b><br>khan / khan123</button>
+      <button type="button" class="demo" data-u="admin" data-p="admin123"><b style="color:var(--text)">Admin</b><br>admin / admin123</button>
+    </div>
+  </div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+try{if(localStorage.getItem('saras-theme')==='light'){document.documentElement.classList.replace('dark','light')}}catch(e){}
+document.querySelectorAll('.demo').forEach(b=>b.onclick=()=>{$('#u').value=b.dataset.u;$('#p').value=b.dataset.p;$('#p').focus()});
+$('#f').onsubmit=async e=>{
+  e.preventDefault();const err=$('#err');err.classList.add('hidden');
+  if(!$('#u').value.trim()||!$('#p').value){err.textContent='Enter your username and password.';err.classList.remove('hidden');return}
+  $('#go').disabled=true;$('#go').textContent='Signing in...';
+  try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:$('#u').value,password:$('#p').value})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error||'Sign-in failed');location.href=j.redirect}
+  catch(x){err.textContent=x.message;err.classList.remove('hidden');$('#go').disabled=false;$('#go').textContent='Sign in'}};
+</script>
+</body>
+</html>
